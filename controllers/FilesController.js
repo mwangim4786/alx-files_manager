@@ -28,7 +28,7 @@ class FilesController {
     static async postUpload(request, response) {
         const user = await FilesController.getUser(request);
         if (!user) {
-        return response.status(401).json({ error: 'Unauthorized' });
+            return response.status(401).json({ error: 'Unauthorized' });
         }
         const { name } = request.body;
         const { type } = request.body;
@@ -50,20 +50,20 @@ class FilesController {
             const idObject = new ObjectID(parentId);
             const file = await files.findOne({ _id: idObject, userId: user._id });
             if (!file) {
-                    return response.status(400).json({ error: 'Parent not found' });
+                return response.status(400).json({ error: 'Parent not found' });
             }
             if (file.type !== 'folder') {
-                    return response.status(400).json({ error: 'Parent is not a folder' });
+                return response.status(400).json({ error: 'Parent is not a folder' });
             }
         }
         if (type === 'folder') {
             files.insertOne(
                 {
-                userId: user._id,
-                name,
-                type,
-                parentId: parentId || 0,
-                isPublic,
+                    userId: user._id,
+                    name,
+                    type,
+                    parentId: parentId || 0,
+                    isPublic,
                 },
             ).then((result) => response.status(201).json({
                 id: result.insertedId,
@@ -79,9 +79,10 @@ class FilesController {
             const filePath = process.env.FOLDER_PATH || '/tmp/files_manager';
             const fileName = `${filePath}/${uuidv4()}`;
             const buff = Buffer.from(data, 'base64');
+            // const storeThis = buff.toString('utf-8');
             try {
                 try {
-                await fs.mkdir(filePath);
+                    await fs.mkdir(filePath);
                 } catch (error) {
 
                 }
@@ -91,12 +92,12 @@ class FilesController {
             }
             files.insertOne(
                 {
-                userId: user._id,
-                name,
-                type,
-                isPublic,
-                parentId: parentId || 0,
-                localPath: fileName,
+                    userId: user._id,
+                    name,
+                    type,
+                    isPublic,
+                    parentId: parentId || 0,
+                    localPath: fileName,
                 },
             ).then((result) => {
                 response.status(201).json(
@@ -112,8 +113,8 @@ class FilesController {
                 if (type === 'image') {
                     fileQueue.add(
                         {
-                        userId: user._id,
-                        fileId: result.insertedId,
+                            userId: user._id,
+                            fileId: result.insertedId,
                         },
                     );
                 }
@@ -159,10 +160,10 @@ class FilesController {
                 { $match: query },
                 { $sort: { _id: -1 } },
                 {
-                $facet: {
-                    metadata: [{ $count: 'total' }, { $addFields: { page: parseInt(pageNum, 10) } }],
-                    data: [{ $skip: 20 * parseInt(pageNum, 10) }, { $limit: 20 }],
-                },
+                    $facet: {
+                        metadata: [{ $count: 'total' }, { $addFields: { page: parseInt(pageNum, 10) } }],
+                        data: [{ $skip: 20 * parseInt(pageNum, 10) }, { $limit: 20 }],
+                    },
                 },
             ],
         ).toArray((err, result) => {
@@ -176,6 +177,7 @@ class FilesController {
                 delete tmpFile.localPath;
                 return tmpFile;
                 });
+                // console.log(final);
                 return response.status(200).json(final);
             }
             console.log('Error occured');
@@ -228,7 +230,7 @@ class FilesController {
         const idObject = new ObjectID(id);
         files.findOne({ _id: idObject }, async (err, file) => {
             if (!file) {
-                    return response.status(404).json({ error: 'Not found' });
+                return response.status(404).json({ error: 'Not found' });
             }
             console.log(file.localPath);
             if (file.isPublic) {
@@ -236,17 +238,17 @@ class FilesController {
                     return response.status(400).json({ error: "A folder doesn't have content" });
                 }
                 try {
-                let fileName = file.localPath;
-                const size = request.param('size');
-                if (size) {
-                    fileName = `${file.localPath}_${size}`;
-                }
-                const data = await fs.readFile(fileName);
-                const contentType = mime.contentType(file.name);
-                return response.header('Content-Type', contentType).status(200).send(data);
+                    let fileName = file.localPath;
+                    const size = request.param('size');
+                    if (size) {
+                        fileName = `${file.localPath}_${size}`;
+                    }
+                    const data = await fs.readFile(fileName);
+                    const contentType = mime.contentType(file.name);
+                    return response.header('Content-Type', contentType).status(200).send(data);
                 } catch (error) {
-                console.log(error);
-                return response.status(404).json({ error: 'Not found' });
+                    console.log(error);
+                    return response.status(404).json({ error: 'Not found' });
                 }
             } else {
                 const user = await FilesController.getUser(request);

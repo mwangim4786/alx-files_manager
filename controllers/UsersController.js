@@ -1,4 +1,3 @@
-
 import sha1 from 'sha1';
 import { ObjectID } from 'mongodb';
 import Queue from 'bull';
@@ -28,10 +27,10 @@ class UsersController {
             } else {
                 const hashedPassword = sha1(password);
                 users.insertOne(
-                    {
-                        email,
-                        password: hashedPassword,
-                    },
+                {
+                    email,
+                    password: hashedPassword,
+                },
                 ).then((result) => {
                     response.status(201).json({ id: result.insertedId, email });
                     userQueue.add({ userId: result.insertedId });
